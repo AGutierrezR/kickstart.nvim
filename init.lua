@@ -329,6 +329,7 @@ rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require("lazy").setup({
 	-- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
+	{ "szymonwilczek/vim-be-better" },
 	{ "NMAC427/guess-indent.nvim", opts = {} },
 	{ "nvim-tree/nvim-web-devicons" },
 
