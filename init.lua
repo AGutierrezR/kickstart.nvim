@@ -1483,6 +1483,50 @@ require("lazy").setup({
 			})
 		end,
 	},
+	-- Syntax aware text-objects, select, move, swap, and peek support
+	-- https://github.com/nvim-treesitter/nvim-treesitter-textobjects/tree/main
+	{
+		"nvim-treesitter/nvim-treesitter-textobjects",
+		branch = "main",
+		event = { "BufReadPre", "BufNewFile" },
+		config = function()
+			require("nvim-treesitter-textobjects").setup({
+				move = {
+					set_jumps = true,
+				},
+			})
+			local move = require("nvim-treesitter-textobjects.move")
+
+			local modes = { "n", "x", "o" }
+
+			local goto_maps = {
+				f = { key = "@function.outer", desc = "function" },
+				c = { key = "@class.outer", desc = "class" },
+				a = { key = "@parameter.outer", desc = "parameter" },
+			}
+
+			for prefix, info in pairs(goto_maps) do
+				local key_lower = prefix:lower()
+				local key_upper = prefix:upper()
+
+				vim.keymap.set(modes, "]" .. key_lower, function()
+					move.goto_next_start(info.key, "textobjects")
+				end, { desc = "Next " .. info.desc .. " start" })
+				vim.keymap.set(modes, "[" .. key_lower, function()
+					move.goto_previous_start(info.key, "textobjects")
+				end, { desc = "Prev " .. info.desc .. " start" })
+				vim.keymap.set(modes, "]" .. key_upper, function()
+					move.goto_next_end(info.key, "textobjects")
+				end, { desc = "Next " .. info.desc .. " end" })
+				vim.keymap.set(modes, "[" .. key_upper, function()
+					move.goto_previous_end(info.key, "textobjects")
+				end, { desc = "Prev " .. info.desc .. " end" })
+			end
+		end,
+		dependencies = {
+			"nvim-treesitter/nvim-treesitter",
+		},
+	},
 
 	-- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
 	-- init.lua. If you want these files, they are in the repository, so you can just download them and
