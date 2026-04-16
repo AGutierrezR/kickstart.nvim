@@ -199,6 +199,10 @@ vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
+-- These two keymaps go together because some terminals may register <C-/> as <C-_>
+vim.keymap.set("t", "<C-/>", "<cmd>close<cr>", { desc = "Hide Terminal" })
+vim.keymap.set("t", "<c-_>", "<cmd>close<cr>", { desc = "which_key_ignore" })
+
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
 -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
@@ -219,6 +223,63 @@ vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
+
+-- Save file
+vim.keymap.set("n", "<C-S>", "<Cmd>silent! update | redraw<CR>", { desc = "Save" })
+vim.keymap.set({ "i", "x" }, "<C-S>", "<Esc><Cmd>silent! update | redraw<CR>", { desc = "Save and go to Normal mode" })
+
+-- Wrapped line navigation
+vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, desc = "Up (wrapped)" })
+vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, desc = "Down (wrapped)" })
+
+vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Scroll half page down and center cursor" })
+vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll half page up and center cursor" })
+
+-- delete single character without copying into register
+vim.keymap.set("n", "x", '"_x')
+
+-- Select last pasted text
+vim.keymap.set("n", "gV", "`[v`]", { desc = "Select last pasted text" })
+
+-- better indent handling
+vim.keymap.set("v", "<", "<gv", { desc = "Indent Left" })
+vim.keymap.set("v", ">", ">gv", { desc = "Indent Right" })
+
+-- Yank block
+vim.keymap.set("n", "YY", "va{Vy", { desc = "Yank Block {}" })
+
+-- Better join lines
+vim.keymap.set("n", "J", "mzJ`z")
+
+-- Search within visual selection
+-- Use <C-\\><C-n> to exit visual mode properly and not <Esc> which can have issues in some terminals
+vim.keymap.set("x", "g/", "<C-\\><C-n>`</\\%V", { silent = false, desc = "Search inside visual selection" })
+
+-- Helper function to insert empty lines
+_G.put_empty_line = function(put_above)
+	if type(put_above) == "boolean" then
+		vim.o.operatorfunc = "v:lua.put_empty_line"
+		vim.g._put_empty_line_above = put_above
+		return "g@l"
+	end
+
+	local target = vim.fn.line(".") - (vim.g._put_empty_line_above and 1 or 0)
+	vim.fn.append(target, vim.fn["repeat"]({ "" }, vim.v.count1))
+end
+
+-- NOTE: if you don't want to support dot-repeat, use this snippet:
+-- ```
+-- vim.keymap.set('n', 'gO', "<Cmd>call append(line('.') - 1, repeat([''], v:count1))<CR>")
+-- vim.keymap.set('n', 'go', "<Cmd>call append(line('.'),     repeat([''], v:count1))<CR>")
+-- ```
+vim.keymap.set("n", "gO", "v:lua.put_empty_line(v:true)", { expr = true, desc = "Put empty line above" })
+vim.keymap.set("n", "go", "v:lua.put_empty_line(v:false)", { expr = true, desc = "Put empty line below" })
+
+-- Switch to last accessed buffer
+vim.keymap.set("n", "ga", "<cmd>b#<CR>", { desc = "Switch to last accessed buffer" })
+
+-- Close current buffer
+vim.keymap.set("n", "<leader>bD", "<cmd>:bd<CR>", { desc = "Delete Buffer and Window", silent = true })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
