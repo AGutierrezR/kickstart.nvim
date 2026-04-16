@@ -704,37 +704,59 @@ require("lazy").setup({
 
 				-- Special Lua Config, as recommended by neovim help docs
 				lua_ls = {
-					on_init = function(client)
-						if client.workspace_folders then
-							local path = client.workspace_folders[1].name
-							if
-								path ~= vim.fn.stdpath("config")
-								and (vim.uv.fs_stat(path .. "/.luarc.json") or vim.uv.fs_stat(path .. "/.luarc.jsonc"))
-							then
-								return
-							end
-						end
-
-						client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
-							runtime = {
-								version = "LuaJIT",
-								path = { "lua/?.lua", "lua/?/init.lua" },
-							},
-							workspace = {
-								checkThirdParty = false,
-								-- NOTE: this is a lot slower and will cause issues when working on your own configuration.
-								--  See https://github.com/neovim/nvim-lspconfig/issues/3189
-								library = vim.tbl_extend("force", vim.api.nvim_get_runtime_file("", true), {
-									"${3rd}/luv/library",
-									"${3rd}/busted/library",
-								}),
-							},
-						})
-					end,
+					-- on_init = function(client)
+					-- 	if client.workspace_folders then
+					-- 		local path = client.workspace_folders[1].name
+					-- 		if
+					-- 			path ~= vim.fn.stdpath("config")
+					-- 			and (vim.uv.fs_stat(path .. "/.luarc.json") or vim.uv.fs_stat(path .. "/.luarc.jsonc"))
+					-- 		then
+					-- 			return
+					-- 		end
+					-- 	end
+					--
+					-- 	client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
+					-- 		runtime = {
+					-- 			version = "LuaJIT",
+					-- 			path = { "lua/?.lua", "lua/?/init.lua" },
+					-- 		},
+					-- 		workspace = {
+					-- 			checkThirdParty = false,
+					-- 			-- NOTE: this is a lot slower and will cause issues when working on your own configuration.
+					-- 			--  See https://github.com/neovim/nvim-lspconfig/issues/3189
+					-- 			library = vim.tbl_extend("force", vim.api.nvim_get_runtime_file("", true), {
+					-- 				"${3rd}/luv/library",
+					-- 				"${3rd}/busted/library",
+					-- 			}),
+					-- 		},
+					-- 	})
+					-- end,
 					settings = {
-						Lua = {},
+						Lua = {
+							completion = {
+								callSnippet = "Replace",
+							},
+						},
 					},
 				},
+				vtsls = {},
+				svelte = {},
+				jsonls = {},
+				cssls = {},
+				cssmodules_ls = {},
+				emmet_language_server = {},
+				html = {
+					init_options = {
+						configurationSection = { "html", "css", "javascript" },
+						embeddedLanguages = {
+							css = true,
+							javascript = true,
+						},
+						provideFormatter = true,
+					},
+				},
+				astro = {},
+				tailwindcss = {},
 			}
 
 			-- Ensure the servers and tools above are installed
@@ -977,16 +999,21 @@ require("lazy").setup({
 			-- ensure basic parser are installed
 			local parsers = {
 				"bash",
-				"c",
-				"diff",
-				"html",
 				"lua",
-				"luadoc",
+				"vim",
+				"javascript",
+				"typescript",
+				"tsx",
+				"svelte",
+				"json",
+				"html",
 				"markdown",
 				"markdown_inline",
-				"query",
-				"vim",
-				"vimdoc",
+				"css",
+				"scss",
+				"yaml",
+				"toml",
+				"go",
 			}
 			require("nvim-treesitter").install(parsers)
 
