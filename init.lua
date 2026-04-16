@@ -1416,6 +1416,44 @@ require("lazy").setup({
 			-- - sr)'  - [S]urround [R]eplace [)] [']
 			require("mini.surround").setup()
 
+			-- Auto-pair brackets, quotes, etc.
+			require("mini.pairs").setup()
+
+			-- Text operators: exchange, evaluate, replace, sort
+			require("mini.operators").setup({
+				evaluate = {
+					prefix = "",
+				},
+
+				-- Exchange text regions
+				exchange = {
+					prefix = "cx",
+					-- Whether to reindent new text to match previous indent
+					reindent_linewise = true,
+				},
+
+				-- Multiply (duplicate) text
+				multiply = {
+					prefix = "cm",
+					-- Function which can modify text before multiplying
+					func = nil,
+				},
+
+				-- Replace text with register
+				replace = {
+					prefix = "cr",
+					-- Whether to reindent new text to match previous indent
+					reindent_linewise = true,
+				},
+
+				-- Sort text
+				sort = {
+					prefix = "cs",
+					-- Function which does the sort
+					func = nil,
+				},
+			})
+
 			-- Simple and easy statusline.
 			--  You could remove this setup call if you don't like it,
 			--  and try some other statusline plugin
