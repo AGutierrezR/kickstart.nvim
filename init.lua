@@ -1337,7 +1337,37 @@ require("lazy").setup({
 			--  - va)  - [V]isually select [A]round [)]paren
 			--  - yinq - [Y]ank [I]nside [N]ext [Q]uote
 			--  - ci'  - [C]hange [I]nside [']quote
-			require("mini.ai").setup({ n_lines = 500 })
+			local ai = require("mini.ai")
+			local spec_treesitter = ai.gen_spec.treesitter
+			require("mini.ai").setup({
+				custom_textobjects = {
+					f = spec_treesitter({ a = "@function.outer", i = "@function.inner" }),
+					c = spec_treesitter({
+						a = { "@class.outer" },
+						i = { "@class.inner" },
+					}),
+					d = { "%f[%d]%d+" }, -- digits
+					e = { -- Single words in different cases (camelCase, snake_case, etc.)
+						{
+							"%u[%l%d]+%f[^%l%d]",
+							"%f[%S][%l%d]+%f[^%l%d]",
+							"%f[%P][%l%d]+%f[^%l%d]",
+							"^[%l%d]+%f[^%l%d]",
+						},
+						"^().*()$",
+					},
+					u = ai.gen_spec.function_call(), -- u for "Usage"
+					U = ai.gen_spec.function_call({ name_pattern = "[%w_]" }), -- without dot in function name
+					g = function() -- whole file
+						local from = { line = 1, col = 1 }
+						local to = {
+							line = vim.fn.line("$"),
+							col = math.max(vim.fn.getline("$"):len(), 1),
+						}
+						return { from = from, to = to }
+					end,
+				},
+			})
 
 			-- Add/delete/replace surroundings (brackets, quotes, etc.)
 			--
