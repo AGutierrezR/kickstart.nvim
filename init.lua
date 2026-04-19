@@ -91,7 +91,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -1051,48 +1051,14 @@ require("lazy").setup({
 			--  See `:help lsp-config` for information about keys and how to configure
 			---@type table<string, vim.lsp.Config>
 			local servers = {
-				-- clangd = {},
-				-- gopls = {},
-				-- pyright = {},
-				-- rust_analyzer = {},
-				--
 				-- Some languages (like typescript) have entire language plugins that can be useful:
 				--    https://github.com/pmizio/typescript-tools.nvim
 				--
 				-- But for many setups, the LSP (`ts_ls`) will work just fine
 				-- ts_ls = {},
 
-				stylua = {}, -- Used to format Lua code
-
 				-- Special Lua Config, as recommended by neovim help docs
 				lua_ls = {
-					-- on_init = function(client)
-					-- 	if client.workspace_folders then
-					-- 		local path = client.workspace_folders[1].name
-					-- 		if
-					-- 			path ~= vim.fn.stdpath("config")
-					-- 			and (vim.uv.fs_stat(path .. "/.luarc.json") or vim.uv.fs_stat(path .. "/.luarc.jsonc"))
-					-- 		then
-					-- 			return
-					-- 		end
-					-- 	end
-					--
-					-- 	client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
-					-- 		runtime = {
-					-- 			version = "LuaJIT",
-					-- 			path = { "lua/?.lua", "lua/?/init.lua" },
-					-- 		},
-					-- 		workspace = {
-					-- 			checkThirdParty = false,
-					-- 			-- NOTE: this is a lot slower and will cause issues when working on your own configuration.
-					-- 			--  See https://github.com/neovim/nvim-lspconfig/issues/3189
-					-- 			library = vim.tbl_extend("force", vim.api.nvim_get_runtime_file("", true), {
-					-- 				"${3rd}/luv/library",
-					-- 				"${3rd}/busted/library",
-					-- 			}),
-					-- 		},
-					-- 	})
-					-- end,
 					settings = {
 						Lua = {
 							completion = {
@@ -1101,6 +1067,7 @@ require("lazy").setup({
 						},
 					},
 				},
+        -- Javascript/TypeScript LPS support by vtsls
 				vtsls = {},
 				svelte = {},
 				jsonls = {},
@@ -1131,6 +1098,14 @@ require("lazy").setup({
 			local ensure_installed = vim.tbl_keys(servers or {})
 			vim.list_extend(ensure_installed, {
 				-- You can add other tools here that you want Mason to install
+				"stylua", -- Lua formatter
+				"eslint", -- JS/TS linter
+				"markdownlint", -- Markdown linter
+				"yamllint", -- YAML linter
+				"jsonlint", -- JSON linter
+				"htmlhint", -- HTML linter
+				"stylelint", -- CSS linter
+				"luacheck", -- Lua linter
 			})
 
 			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
@@ -1142,47 +1117,77 @@ require("lazy").setup({
 		end,
 	},
 
-	{ -- Autoformat
+	{
 		"stevearc/conform.nvim",
-		event = { "BufWritePre" },
-		cmd = { "ConformInfo" },
+		cmd = "ConformInfo",
 		keys = {
 			{
 				"<leader>=",
 				function()
-					require("conform").format({ async = true, lsp_format = "fallback" })
+					require("conform").format({
+						lsp_fallback = true,
+						async = false,
+					})
 				end,
-				mode = "",
-				desc = "[F]ormat buffer",
+				desc = "Format file or range (in visual mode)",
+				mode = { "n", "v" },
+			},
+			{
+				"<leader>cf",
+				function()
+					require("conform").format({
+						lsp_fallback = true,
+						async = false,
+					})
+				end,
+				desc = "Format",
+				mode = { "n", "v" },
 			},
 		},
-		---@module 'conform'
-		---@type conform.setupOpts
-		opts = {
-			notify_on_error = false,
-			format_on_save = function(bufnr)
-				-- Disable "format_on_save lsp_fallback" for languages that don't
-				-- have a well standardized coding style. You can add additional
-				-- languages here or re-enable it for the disabled ones.
-				local disable_filetypes = { c = true, cpp = true }
-				if disable_filetypes[vim.bo[bufnr].filetype] then
-					return nil
-				else
-					return {
-						timeout_ms = 500,
-						lsp_format = "fallback",
-					}
-				end
-			end,
-			formatters_by_ft = {
+		opts = function()
+			local opts = {
+				default_format_opts = {
+					timeout_ms = 3000,
+					async = false, -- not recommended to change
+					quiet = false, -- not recommended to change
+					lsp_format = "fallback", -- not recommended to change
+				},
+				formatters_by_ft = {
+					javascript = { "prettier" },
+					typescript = { "prettier" },
+					javascriptreact = { "prettier" },
+					typescriptreact = { "prettier" },
+					css = { "prettier" },
+					html = { "prettier" },
+					json = { "prettier" },
+					yaml = { "prettier" },
+markdown = { "prettier" },
 				lua = { "stylua" },
-				-- Conform can also run multiple formatters sequentially
-				-- python = { "isort", "black" },
-				--
-				-- You can use 'stop_after_first' to run the first available formatter from the list
-				-- javascript = { "prettierd", "prettier", stop_after_first = true },
+				md = { "prettier" },
 			},
-		},
+				formatters = {
+					prettier = {
+						require_cwd = true,
+						cwd = require("conform.util").root_file({
+							".prettierrc",
+							".prettierrc.json",
+							".prettierrc.yml",
+							".prettierrc.yaml",
+							".prettierrc.json5",
+							".prettierrc.js",
+							".prettierrc.cjs",
+							".prettierrc.mjs",
+							".prettierrc.toml",
+							"prettier.config.js",
+							"prettier.config.cjs",
+							"prettier.config.mjs",
+						}),
+					},
+				},
+			}
+
+			return opts
+		end,
 	},
 	{
 		"backdround/improved-search.nvim",
@@ -1504,7 +1509,6 @@ require("lazy").setup({
 				"scss",
 				"yaml",
 				"toml",
-				"go",
 			}
 			require("nvim-treesitter").install(parsers)
 
